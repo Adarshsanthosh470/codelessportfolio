@@ -1,73 +1,72 @@
-# Welcome to your  project
+🚀 Codeless Portfolio
 
-## Project info
+Codeless Portfolio is a zero-coding portfolio builder that allows anyone to create, customize, and publish a professional portfolio website in minutes — without writing a single line of code.
 
-**URL**: https://.dev/projects/REPLACE_WITH_PROJECT_ID
+The platform provides ready-made templates, a free-form canvas editor, and one-click publishing using Netlify, with secure authentication powered by Supabase.
 
-## How can I edit this code?
+✨ Features
 
-There are several ways of editing your application.
+🧩 No-Code Portfolio Builder
 
-**Use **
+Create portfolios without any programming knowledge
 
-Simply visit the [ Project](https://.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+🎨 Pre-built Templates
 
-Changes made via  will be committed automatically to this repo.
+Professionally designed, responsive templates
 
-**Use your preferred IDE**
+🖌️ Free Canvas Mode
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in .
+Drag, arrange, and customize layout, colors, fonts, and sections
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+👁️ Live Preview
 
-Follow these steps:
+See changes instantly while editing
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+🔐 Secure Authentication
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+Email OTP login using Supabase
 
-# Step 3: Install the necessary dependencies.
-npm i
+🚀 One-Click Publish
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+Publish portfolios instantly with a public URL
 
-**Edit a file directly in GitHub**
+🌍 Public Portfolio URLs
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Example: https://codelessportfolio.netlify.app/username
 
-**Use GitHub Codespaces**
+📱 Responsive Design
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Works on desktop, tablet, and mobile
 
-## What technologies are used for this project?
+🧠 Daily Deployment Limit
 
-This project is built with:
+Maximum 2 publishes per user per day (rate-limited via Supabase)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+🛠️ Tech Stack
+Frontend
 
-## How can I deploy this project?
+React + TypeScript
 
-Simply open [](https://.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Vite
 
-## Can I connect a custom domain to my  project?
+Tailwind CSS
 
-Yes, you can!
+shadcn/ui
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+React Router
 
-Read more here: [Setting up a custom domain](https://docs..dev/features/custom-domain#custom-domain)
+Backend / Services
+
+Supabase
+
+Authentication (Email OTP)
+
+Database (PostgreSQL)
+
+Row-level security
+
+Netlify
+
+Hosting & deployment
+
+SPA routing with _redirects
