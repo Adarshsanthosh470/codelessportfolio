@@ -7,7 +7,9 @@ import Index from "./pages/Index";
 import Templates from "./pages/Templates";
 import Features from "./pages/Features";
 import Editor from "./pages/Editor";
-import Portfolio from "./pages/Portfolio";
+// ✅ correct (matches filename exactly)
+import Portfolio from "./pages/portfolio";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
