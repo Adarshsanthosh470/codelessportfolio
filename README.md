@@ -72,3 +72,25 @@ Netlify
 Hosting & deployment
 
 SPA routing with _redirects
+
+🚧 Future Enhancements
+
+Custom domain support
+
+Portfolio analytics (views, clicks)
+
+Export to static HTML
+
+Theme marketplace
+
+Profile dashboard for users
+
+📜 License
+
+This project is currently private / personal use.
+Licensing details can be added later if open-sourced.
+
+👤 Author
+
+Adarsh Santhosh
+© 2025 — All Rights Reserved
