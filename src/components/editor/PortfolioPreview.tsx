@@ -2,7 +2,11 @@ import { useEditor } from "@/contexts/EditorContext";
 import { templates } from "@/data/templates";
 import { Github, Linkedin, Twitter, Instagram, Globe, Mail } from "lucide-react";
 
-const PortfolioPreview = () => {
+interface PortfolioPreviewProps {
+  readOnly?: boolean;
+}
+
+const PortfolioPreview = ({ readOnly }: PortfolioPreviewProps) => {
   const { state } = useEditor();
   const { portfolioData, selectedTemplate, customColors, customFont } = state;
 
@@ -53,25 +57,25 @@ const PortfolioPreview = () => {
         <p className="text-lg leading-relaxed opacity-80">{portfolioData.bio}</p>
       </section>
 
-      {/* Skills */}
-      <section className="max-w-2xl mx-auto mb-16">
-        <h2 className="text-xl font-semibold mb-4" style={{ color: customColors.primary }}>Skills</h2>
-        <div className="flex flex-wrap gap-2">
-          {portfolioData.skills.map((skill, i) => (
-            <span 
-              key={i} 
-              className="px-4 py-2 rounded-full text-sm"
-              style={{ background: customColors.primary + '15', color: customColors.text }}
-            >
-              {skill}
-            </span>
-          ))}
-        </div>
-      </section>
+      {/* Education */}
+      {portfolioData.education.length > 0 && (
+        <section className="max-w-2xl mx-auto mb-16">
+          <h2 className="text-xl font-semibold mb-4" style={{ color: customColors.primary }}>{portfolioData.sectionTitles?.education || "Education"}</h2>
+          <div className="space-y-4">
+            {portfolioData.education.map((edu) => (
+              <div key={edu.id} className="p-4 rounded-xl border" style={{ borderColor: customColors.text + '15' }}>
+                <h3 className="font-semibold text-lg mb-2">{edu.institution}</h3>
+                <p className="opacity-70">{edu.degree} in {edu.field}</p>
+                <p className="text-sm opacity-60">{edu.startYear} - {edu.endYear}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Projects */}
       <section className="max-w-2xl mx-auto mb-16">
-        <h2 className="text-xl font-semibold mb-6" style={{ color: customColors.primary }}>Projects</h2>
+        <h2 className="text-xl font-semibold mb-6" style={{ color: customColors.primary }}>{portfolioData.sectionTitles?.projects || "Projects"}</h2>
         <div className="space-y-6">
           {portfolioData.projects.map((project) => (
             <div key={project.id} className="p-6 rounded-xl border" style={{ borderColor: customColors.text + '15' }}>
@@ -88,6 +92,22 @@ const PortfolioPreview = () => {
           ))}
         </div>
       </section>
+
+      {/* Experience */}
+      {(portfolioData.experience && portfolioData.experience.length > 0) && (
+        <section className="max-w-2xl mx-auto mb-16">
+          <h2 className="text-xl font-semibold mb-4" style={{ color: customColors.primary }}>{portfolioData.sectionTitles?.experience || "Experience"}</h2>
+          <div className="space-y-4">
+            {portfolioData.experience.map((exp) => (
+              <div key={exp.id} className="p-4 rounded-xl border" style={{ borderColor: customColors.text + '15' }}>
+                <h3 className="font-semibold text-lg mb-2">{exp.position} at {exp.company}</h3>
+                <p className="opacity-70 mb-2">{exp.description}</p>
+                <p className="text-sm opacity-60">{exp.startYear} - {exp.current ? "Present" : exp.endYear}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Social Links */}
       <section className="max-w-2xl mx-auto">
@@ -106,6 +126,20 @@ const PortfolioPreview = () => {
           ))}
         </div>
       </section>
+
+      {/* Branding */}
+      <footer className="mt-16 py-8 text-center">
+        <a
+          href="https://codelessportfolio.netlify.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-sm opacity-60 hover:opacity-100 transition-opacity"
+          style={{ color: customColors.text }}
+        >
+          <Globe className="w-4 h-4" />
+          Powered by CodeLess Portfolio
+        </a>
+      </footer>
     </div>
   );
 
@@ -157,20 +191,18 @@ const PortfolioPreview = () => {
       {/* Content */}
       <section className="p-8 md:p-16">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-semibold mb-6" style={{ color: customColors.primary }}>Skills & Expertise</h2>
-          <div className="flex flex-wrap gap-3 mb-16">
-            {portfolioData.skills.map((skill, i) => (
-              <span 
-                key={i} 
-                className="px-5 py-2 rounded-xl text-sm font-medium"
-                style={{ background: customColors.primary, color: '#fff' }}
-              >
-                {skill}
-              </span>
+          <h2 className="text-2xl font-semibold mb-6" style={{ color: customColors.primary }}>{portfolioData.sectionTitles?.education || "Education"}</h2>
+          <div className="space-y-4 mb-16">
+            {portfolioData.education.map((edu) => (
+              <div key={edu.id} className="p-6 rounded-2xl" style={{ background: customColors.primary + '10', borderLeft: `4px solid ${customColors.primary}` }}>
+                <h3 className="font-semibold text-xl mb-3" style={{ color: '#fff' }}>{edu.institution}</h3>
+                <p className="opacity-70">{edu.degree} in {edu.field}</p>
+                <p className="text-sm opacity-60">{edu.startYear} - {edu.endYear}</p>
+              </div>
             ))}
           </div>
 
-          <h2 className="text-2xl font-semibold mb-6" style={{ color: customColors.primary }}>Featured Projects</h2>
+          <h2 className="text-2xl font-semibold mb-6" style={{ color: customColors.primary }}>{portfolioData.sectionTitles?.projects || "Featured Projects"}</h2>
           <div className="grid md:grid-cols-2 gap-6">
             {portfolioData.projects.map((project) => (
               <div 
@@ -191,7 +223,36 @@ const PortfolioPreview = () => {
             ))}
           </div>
         </div>
+
+        {/* Experience */}
+        {(portfolioData.experience && portfolioData.experience.length > 0) && (
+          <section className="max-w-4xl mx-auto mb-16">
+            <h2 className="text-2xl font-semibold mb-6" style={{ color: customColors.primary }}>{portfolioData.sectionTitles?.experience || "Experience"}</h2>
+            <div className="space-y-4">
+              {portfolioData.experience.map((exp) => (
+                <div key={exp.id} className="p-6 rounded-2xl" style={{ background: customColors.primary + '10', borderLeft: `4px solid ${customColors.primary}` }}>
+                  <h3 className="font-semibold text-xl mb-3" style={{ color: '#fff' }}>{exp.position} at {exp.company}</h3>
+                  <p className="opacity-70 mb-2">{exp.description}</p>
+                  <p className="text-sm opacity-60">{exp.startYear} - {exp.current ? "Present" : exp.endYear}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </section>
+
+      {/* Branding */}
+      <footer className="py-8 text-center" style={{ background: customColors.secondary }}>
+        <a
+          href="https://codelessportfolio.netlify.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-sm opacity-60 hover:opacity-100 transition-opacity text-white"
+        >
+          <Globe className="w-4 h-4" />
+          Powered by CodeLess Portfolio
+        </a>
+      </footer>
     </div>
   );
 
@@ -255,31 +316,28 @@ const PortfolioPreview = () => {
         </div>
       </section>
 
-      {/* Skills as floating pills */}
-      <section className="px-8 md:px-16 py-12">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8" style={{ fontFamily: customFont }}>What I Do</h2>
-          <div className="flex flex-wrap gap-4">
-            {portfolioData.skills.map((skill, i) => (
-              <span 
-                key={i} 
-                className="px-6 py-3 rounded-2xl text-base font-medium transform hover:scale-105 transition-transform"
-                style={{ 
-                  background: i % 2 === 0 ? customColors.primary : customColors.primary + '20',
-                  color: i % 2 === 0 ? '#fff' : customColors.text
-                }}
-              >
-                {skill}
-              </span>
-            ))}
+      {/* Education */}
+      {portfolioData.education.length > 0 && (
+        <section className="px-8 md:px-16 py-12">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold mb-8" style={{ fontFamily: customFont }}>{portfolioData.sectionTitles?.education || "Education"}</h2>
+            <div className="space-y-8">
+              {portfolioData.education.map((edu, i) => (
+                <div key={edu.id} className="p-8 rounded-3xl transform hover:-translate-y-1 transition-all" style={{ background: customColors.primary + '08', border: `2px solid ${customColors.primary}30` }}>
+                  <h3 className="font-bold text-2xl mb-3" style={{ color: customColors.primary }}>{edu.institution}</h3>
+                  <p className="opacity-70 text-lg mb-4">{edu.degree} in {edu.field}</p>
+                  <p className="text-sm opacity-60">{edu.startYear} - {edu.endYear}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Projects */}
       <section className="px-8 md:px-16 py-12">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8" style={{ fontFamily: customFont }}>My Work</h2>
+          <h2 className="text-3xl font-bold mb-8" style={{ fontFamily: customFont }}>{portfolioData.sectionTitles?.projects || "My Work"}</h2>
           <div className="space-y-8">
             {portfolioData.projects.map((project, i) => (
               <div 
@@ -308,9 +366,39 @@ const PortfolioPreview = () => {
           </div>
         </div>
       </section>
+
+      {/* Experience */}
+      {(portfolioData.experience && portfolioData.experience.length > 0) && (
+        <section className="px-8 md:px-16 py-12">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold mb-8" style={{ fontFamily: customFont }}>{portfolioData.sectionTitles?.experience || "Experience"}</h2>
+            <div className="space-y-8">
+              {portfolioData.experience.map((exp, i) => (
+                <div key={exp.id} className="p-8 rounded-3xl transform hover:-translate-y-1 transition-all" style={{ background: customColors.primary + '08', border: `2px solid ${customColors.primary}30` }}>
+                  <h3 className="font-bold text-2xl mb-3" style={{ color: customColors.primary }}>{exp.position} at {exp.company}</h3>
+                  <p className="opacity-70 text-lg mb-4">{exp.description}</p>
+                  <p className="text-sm opacity-60">{exp.startYear} - {exp.current ? "Present" : exp.endYear}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Branding */}
+      <footer className="py-8 text-center" style={{ background: customColors.background, color: customColors.text }}>
+        <a
+          href="https://codelessportfolio.netlify.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-sm opacity-60 hover:opacity-100 transition-opacity"
+        >
+          <Globe className="w-4 h-4" />
+          Powered by CodeLess Portfolio
+        </a>
+      </footer>
     </div>
   );
-
   const renderProfessionalTemplate = () => (
     <div className="min-h-full" style={{ background: customColors.background, color: customColors.text }}>
       {/* Centered hero */}
@@ -333,42 +421,36 @@ const PortfolioPreview = () => {
           <h1 className="text-4xl font-bold mb-2 text-white" style={{ fontFamily: customFont }}>
             {portfolioData.name}
           </h1>
-          <p className="text-xl opacity-90 text-white/80">{portfolioData.title}</p>
+          <p className="text-xl opacity-90 text-white/80 mb-4">{portfolioData.title}</p>
+          <p className="text-lg leading-relaxed opacity-90 text-white/80 max-w-2xl">{portfolioData.bio}</p>
         </div>
       </section>
 
-      {/* Bio */}
-      <section className="p-8 md:p-16 border-b" style={{ borderColor: customColors.text + '15' }}>
-        <div className="max-w-3xl mx-auto text-center">
-          <p className="text-lg leading-relaxed opacity-80">{portfolioData.bio}</p>
-        </div>
-      </section>
-
-      {/* Skills grid */}
-      <section className="p-8 md:p-16">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-xl font-semibold mb-6 text-center" style={{ color: customColors.primary }}>
-            Core Competencies
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {portfolioData.skills.map((skill, i) => (
-              <div 
-                key={i} 
-                className="p-4 rounded-lg text-center"
-                style={{ background: customColors.secondary + '30' }}
-              >
-                <span className="font-medium">{skill}</span>
-              </div>
-            ))}
+      {/* Education */}
+      {portfolioData.education.length > 0 && (
+        <section className="p-8 md:p-16">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-semibold mb-6 text-center" style={{ color: customColors.primary }}>{portfolioData.sectionTitles?.education || "Education"}</h2>
+            <div className="space-y-4">
+              {portfolioData.education.map((edu) => (
+                <div key={edu.id} className="p-6 rounded-lg bg-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4" style={{ background: customColors.background }}>
+                  <div>
+                    <h3 className="font-semibold text-lg">{edu.institution}</h3>
+                    <p className="opacity-70">{edu.degree} in {edu.field}</p>
+                  </div>
+                  <div className="text-sm opacity-60">{edu.startYear} - {edu.endYear}</div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Projects table-like */}
       <section className="p-8 md:p-16" style={{ background: customColors.secondary + '20' }}>
         <div className="max-w-4xl mx-auto">
           <h2 className="text-xl font-semibold mb-6 text-center" style={{ color: customColors.primary }}>
-            Portfolio
+            {portfolioData.sectionTitles?.projects || "Portfolio"}
           </h2>
           <div className="space-y-4">
             {portfolioData.projects.map((project) => (
@@ -398,6 +480,26 @@ const PortfolioPreview = () => {
         </div>
       </section>
 
+      {/* Experience */}
+      {(portfolioData.experience && portfolioData.experience.length > 0) && (
+        <section className="p-8 md:p-16">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-semibold mb-6 text-center" style={{ color: customColors.primary }}>{portfolioData.sectionTitles?.experience || "Experience"}</h2>
+            <div className="space-y-4">
+              {portfolioData.experience.map((exp) => (
+                <div key={exp.id} className="p-6 rounded-lg bg-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4" style={{ background: customColors.background }}>
+                  <div>
+                    <h3 className="font-semibold text-lg">{exp.position} at {exp.company}</h3>
+                    <p className="opacity-70">{exp.description}</p>
+                  </div>
+                  <div className="text-sm opacity-60">{exp.startYear} - {exp.current ? "Present" : exp.endYear}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Contact */}
       <section className="p-8 md:p-16 text-center">
         <div className="max-w-3xl mx-auto">
@@ -418,6 +520,19 @@ const PortfolioPreview = () => {
           </div>
         </div>
       </section>
+
+      {/* Branding */}
+      <footer className="py-8 text-center" style={{ background: customColors.background, color: customColors.text }}>
+        <a
+          href="https://codelessportfolio.netlify.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-sm opacity-60 hover:opacity-100 transition-opacity"
+        >
+          <Globe className="w-4 h-4" />
+          Powered by CodeLess Portfolio
+        </a>
+      </footer>
     </div>
   );
 
@@ -437,10 +552,21 @@ const PortfolioPreview = () => {
   };
 
   return (
-    <div className="flex-1 bg-muted/50 overflow-auto">
+    <div className="flex-1 bg-muted/50 overflow-auto relative">
       <div className="min-h-full" style={styles}>
         {renderTemplate()}
       </div>
+
+      {/* Branding link to codelessportfolio site (opens in new tab) */}
+      <a
+        href="https://codelessportfolio.netlify.app/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-4 right-4 p-2 rounded-full bg-white/90 shadow-md z-50"
+        aria-label="CodelessPortfolio"
+      >
+        <Globe className="w-5 h-5 text-primary" />
+      </a>
     </div>
   );
 };

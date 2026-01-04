@@ -1,6 +1,6 @@
 export interface PortfolioSection {
   id: string;
-  type: 'hero' | 'about' | 'skills' | 'projects' | 'education' | 'contact';
+  type: 'hero' | 'about' | 'education' | 'projects' | 'skills' | 'experience' | 'contact';
   visible: boolean;
   order: number;
 }
@@ -40,16 +40,16 @@ export interface SocialLink {
 }
 
 export interface PortfolioData {
-  name: string;
-  title: string;
-  bio: string;
-  photo: string;
-  skills: string[];
-  projects: Project[];
-  education: Education[];
-  experience: Experience[];
-  socialLinks: SocialLink[];
-  sections: PortfolioSection[];
+   name: string;
+   title: string;
+   bio: string;
+   photo: string;
+   projects: Project[];
+   education: Education[];
+   experience: Experience[];
+   socialLinks: SocialLink[];
+   sections: PortfolioSection[];
+   sectionTitles?: Record<string, string>;
 }
 
 export interface TemplateConfig {

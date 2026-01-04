@@ -26,7 +26,6 @@ interface PublishDialogProps {
 
 const PublishDialog = ({ open, onOpenChange, deploymentsRemaining }: PublishDialogProps) => {
   const [username, setUsername] = useState("");
-  const [isPublishing, setIsPublishing] = useState(false);
   const [publishSuccess, setPublishSuccess] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
@@ -102,17 +101,11 @@ const PublishDialog = ({ open, onOpenChange, deploymentsRemaining }: PublishDial
       return;
     }
 
-    setIsPublishing(true);
-
-    // Simulate deployment
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    setIsPublishing(false);
     setPublishSuccess(true);
 
     toast({
       title: "Portfolio Published!",
-      description: `Your portfolio is now live at ${portfolioUrl}`,
+      description: `Your portfolio is now live at https://${portfolioUrl}`,
     });
   };
 
@@ -287,23 +280,14 @@ const PublishDialog = ({ open, onOpenChange, deploymentsRemaining }: PublishDial
         </div>
 
         <DialogFooter className="flex-col gap-2 sm:flex-col">
-          <Button 
-            variant="hero" 
-            className="w-full" 
+          <Button
+            variant="hero"
+            className="w-full"
             onClick={handlePublish}
-            disabled={isPublishing || !username.trim()}
+            disabled={!username.trim()}
           >
-            {isPublishing ? (
-              <>
-                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
-                Publishing...
-              </>
-            ) : (
-              <>
-                <Rocket className="w-4 h-4 mr-2" />
-                Publish Portfolio
-              </>
-            )}
+            <Rocket className="w-4 h-4 mr-2" />
+            Publish Portfolio
           </Button>
           <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
             Cancel

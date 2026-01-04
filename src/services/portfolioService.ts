@@ -1,9 +1,10 @@
-import { supabase } from "@/services/supabase";
+import { db } from "@/services/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 /**
  * Saves or updates a user's portfolio.
  * - Enforces unique username
- * - Stores portfolio data as JSONB
+ * - Stores portfolio data as JSON
  */
 export async function savePortfolio(
   userId: string,
@@ -17,41 +18,27 @@ export async function savePortfolio(
   const normalized = String(username).toLowerCase().trim();
 
   // check if username already exists for another user
-  const { data: existing, error: selectErr } = await supabase
-    .from("portfolios")
-    .select("id, user_id")
-    .eq("username", normalized)
-    .maybeSingle();
+  const usernameDocRef = doc(db, "portfolios", normalized);
+  const usernameDoc = await getDoc(usernameDocRef);
 
-  if (selectErr) {
-    console.error("savePortfolio select error:", selectErr);
-    throw selectErr;
+  if (usernameDoc.exists()) {
+    const existingData = usernameDoc.data();
+    if (existingData.userId !== userId) {
+      throw new Error("Username already taken by another user");
+    }
   }
 
-  if (existing && existing.user_id !== userId) {
-    throw new Error("Username already taken by another user");
-  }
+  // save/update portfolio
+  const portfolioData = {
+    userId,
+    username: normalized,
+    data,
+    updatedAt: new Date(),
+  };
 
-  // upsert portfolio (matches DB column name: `data`)
-  const { data: saved, error: upsertErr } = await supabase
-    .from("portfolios")
-    .upsert(
-      {
-        user_id: userId,
-        username: normalized,
-        data, // ✅ MUST be `data`, not `state`
-      },
-      { onConflict: "username" }
-    )
-    .select()
-    .single();
+  await setDoc(doc(db, "portfolios", normalized), portfolioData);
 
-  if (upsertErr) {
-    console.error("savePortfolio upsert error:", upsertErr);
-    throw upsertErr;
-  }
-
-  return saved;
+  return portfolioData;
 }
 
 export default { savePortfolio };

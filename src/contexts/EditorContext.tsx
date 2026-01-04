@@ -45,9 +45,22 @@ const initialState: EditorState = {
 
 const EditorContext = createContext<EditorContextType | undefined>(undefined);
 
-export const EditorProvider = ({ children }: { children: ReactNode }) => {
-  // 🔹 Load state from localStorage ONCE (safe + cloned)
+interface EditorProviderProps {
+  children: ReactNode;
+  initialData?: Partial<EditorState>;
+}
+
+export const EditorProvider = ({ children, initialData }: EditorProviderProps) => {
+  // 🔹 Load state from localStorage ONCE (safe + cloned) or use initialData
   const [state, setState] = useState<EditorState>(() => {
+    if (initialData) {
+      return {
+        ...initialState,
+        ...initialData,
+        portfolioData: structuredClone(initialData.portfolioData || defaultPortfolioData),
+      };
+    }
+
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -69,14 +82,16 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
     }
   });
 
-  // 🔹 Persist state to localStorage on every change
+  // 🔹 Persist state to localStorage on every change (only if not using initialData)
   useEffect(() => {
+    if (initialData) return; // Don't persist when viewing published portfolios
+
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
       // ignore storage write errors
     }
-  }, [state]);
+  }, [state, initialData]);
 
   const setMode = (mode: "template" | "canvas") => {
     setState((prev) => ({ ...prev, mode }));

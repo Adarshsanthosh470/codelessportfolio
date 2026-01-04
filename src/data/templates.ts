@@ -48,7 +48,6 @@ export const defaultPortfolioData = {
   title: "Your Professional Title",
   bio: "Write a brief introduction about yourself, your experience, and what you're passionate about.",
   photo: "",
-  skills: ["JavaScript", "React", "Node.js", "UI/UX Design"],
   projects: [
     {
       id: "1",
@@ -86,10 +85,15 @@ export const defaultPortfolioData = {
   ],
   sections: [
     { id: "hero", type: "hero" as const, visible: true, order: 0 },
-    { id: "about", type: "about" as const, visible: true, order: 1 },
-    { id: "skills", type: "skills" as const, visible: true, order: 2 },
-    { id: "projects", type: "projects" as const, visible: true, order: 3 },
-    { id: "education", type: "education" as const, visible: true, order: 4 },
-    { id: "contact", type: "contact" as const, visible: true, order: 5 },
+    { id: "education", type: "education" as const, visible: true, order: 1 },
+    { id: "projects", type: "projects" as const, visible: true, order: 2 },
+    { id: "experience", type: "experience" as const, visible: true, order: 3 },
+    { id: "contact", type: "contact" as const, visible: true, order: 4 },
   ],
+  sectionTitles: {
+    skills: "Skills",
+    projects: "Projects",
+    education: "Education",
+    experience: "Experience",
+  },
 };

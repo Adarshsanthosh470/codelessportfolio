@@ -5,40 +5,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { 
-  User, 
-  Briefcase, 
-  GraduationCap, 
-  Link as LinkIcon, 
+import {
+  User,
+  Briefcase,
+  GraduationCap,
+  Link as LinkIcon,
   Palette,
   Type,
   Plus,
   Trash2,
   Image,
-  Building2
+  Building2,
+  Code
 } from "lucide-react";
-import { useState } from "react";
-import { Education, Experience } from "@/types/portfolio";
+import { Education, Experience, Project } from "@/types/portfolio";
 
 const EditorSidebar = () => {
-  const { state, updatePortfolioData, updateCustomColors, updateCustomFont } = useEditor();
-  const { portfolioData, customColors, customFont } = state;
-  const [newSkill, setNewSkill] = useState("");
-
-  const handleAddSkill = () => {
-    if (newSkill.trim()) {
-      updatePortfolioData({
-        skills: [...portfolioData.skills, newSkill.trim()],
-      });
-      setNewSkill("");
-    }
-  };
-
-  const handleRemoveSkill = (index: number) => {
-    updatePortfolioData({
-      skills: portfolioData.skills.filter((_, i) => i !== index),
-    });
-  };
+   const { state, updatePortfolioData, updateCustomColors, updateCustomFont } = useEditor();
+   const { portfolioData, customColors, customFont } = state;
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -109,7 +93,36 @@ const EditorSidebar = () => {
       experience: (portfolioData.experience || []).filter((exp) => exp.id !== id),
     });
   };
-
+  
+  // Project handlers
+  const handleAddProject = () => {
+    const newProject: Project = {
+      id: `proj-${Date.now()}`,
+      title: "",
+      description: "",
+      image: "",
+      link: "",
+      tags: [],
+    };
+    updatePortfolioData({
+      projects: [...portfolioData.projects, newProject],
+    });
+  };
+  
+  const handleUpdateProject = (id: string, updates: Partial<Project>) => {
+    updatePortfolioData({
+      projects: portfolioData.projects.map((proj) =>
+        proj.id === id ? { ...proj, ...updates } : proj
+      ),
+    });
+  };
+  
+  const handleRemoveProject = (id: string) => {
+    updatePortfolioData({
+      projects: portfolioData.projects.filter((proj) => proj.id !== id),
+    });
+  };
+  
   const fonts = ["Inter", "Outfit", "Poppins", "Roboto", "Playfair Display"];
 
   return (
@@ -191,43 +204,6 @@ const EditorSidebar = () => {
             </div>
           </div>
 
-          {/* Skills Section */}
-          <div className="space-y-4">
-            <h3 className="font-medium flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-primary" />
-              Skills
-            </h3>
-            
-            <div className="flex gap-2">
-              <Input
-                value={newSkill}
-                onChange={(e) => setNewSkill(e.target.value)}
-                placeholder="Add a skill"
-                onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
-              />
-              <Button size="icon" variant="outline" onClick={handleAddSkill}>
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              {portfolioData.skills.map((skill, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-1 px-3 py-1 bg-secondary rounded-full text-sm"
-                >
-                  {skill}
-                  <button
-                    onClick={() => handleRemoveSkill(index)}
-                    className="ml-1 hover:text-destructive transition-colors"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Education Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -240,7 +216,15 @@ const EditorSidebar = () => {
                 Add
               </Button>
             </div>
-
+            
+            <div className="space-y-2">
+              <Label>Section Title</Label>
+              <Input
+                value={portfolioData.sectionTitles?.education || "Education"}
+                onChange={(e) => updatePortfolioData({ sectionTitles: { ...portfolioData.sectionTitles, education: e.target.value } })}
+              />
+            </div>
+            
             {portfolioData.education.map((edu) => (
               <div key={edu.id} className="p-4 bg-muted/50 rounded-lg space-y-3">
                 <div className="flex justify-between items-start">
@@ -299,7 +283,15 @@ const EditorSidebar = () => {
                 Add
               </Button>
             </div>
-
+            
+            <div className="space-y-2">
+              <Label>Section Title</Label>
+              <Input
+                value={portfolioData.sectionTitles?.experience || "Experience"}
+                onChange={(e) => updatePortfolioData({ sectionTitles: { ...portfolioData.sectionTitles, experience: e.target.value } })}
+              />
+            </div>
+            
             {(portfolioData.experience || []).map((exp) => (
               <div key={exp.id} className="p-4 bg-muted/50 rounded-lg space-y-3">
                 <div className="flex justify-between items-start">
@@ -354,6 +346,104 @@ const EditorSidebar = () => {
             {(!portfolioData.experience || portfolioData.experience.length === 0) && (
               <p className="text-sm text-muted-foreground text-center py-4 bg-muted/30 rounded-lg">
                 No experience added yet. Click "Add" to include your work history.
+              </p>
+            )}
+          </div>
+
+          {/* Projects Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium flex items-center gap-2">
+                <Code className="w-4 h-4 text-primary" />
+                Projects
+              </h3>
+              <Button size="sm" variant="outline" onClick={handleAddProject}>
+                <Plus className="w-4 h-4 mr-1" />
+                Add
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Section Title</Label>
+              <Input
+                value={portfolioData.sectionTitles?.projects || "Projects"}
+                onChange={(e) => updatePortfolioData({ sectionTitles: { ...portfolioData.sectionTitles, projects: e.target.value } })}
+              />
+            </div>
+
+            {portfolioData.projects.map((project) => (
+              <div key={project.id} className="p-4 bg-muted/50 rounded-lg space-y-3">
+                <div className="flex justify-between items-start">
+                  <Label className="text-xs text-muted-foreground">Project Entry</Label>
+                  <button
+                    onClick={() => handleRemoveProject(project.id)}
+                    className="text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <Input
+                  value={project.title}
+                  onChange={(e) => handleUpdateProject(project.id, { title: e.target.value })}
+                  placeholder="Project Title"
+                />
+                <Textarea
+                  value={project.description}
+                  onChange={(e) => handleUpdateProject(project.id, { description: e.target.value })}
+                  placeholder="Project description..."
+                  rows={3}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    value={project.image}
+                    onChange={(e) => handleUpdateProject(project.id, { image: e.target.value })}
+                    placeholder="Image URL"
+                  />
+                  <Input
+                    value={project.link}
+                    onChange={(e) => handleUpdateProject(project.id, { link: e.target.value })}
+                    placeholder="Project Link"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm">Tags</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {project.tags.map((tag, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-1 px-3 py-1 bg-secondary rounded-full text-sm"
+                      >
+                        {tag}
+                        <button
+                          onClick={() => {
+                            const newTags = project.tags.filter((_, i) => i !== index);
+                            handleUpdateProject(project.id, { tags: newTags });
+                          }}
+                          className="ml-1 hover:text-destructive transition-colors"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <Input
+                    placeholder="Add tag and press Enter"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                        const newTag = e.currentTarget.value.trim();
+                        handleUpdateProject(project.id, { tags: [...project.tags, newTag] });
+                        e.currentTarget.value = '';
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+
+            {portfolioData.projects.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4 bg-muted/30 rounded-lg">
+                No projects added yet. Click "Add" to include your work.
               </p>
             )}
           </div>

@@ -1,4 +1,5 @@
-import { supabase } from "@/services/supabase";
+import { db } from "@/services/firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 function todayIsoDate(): string {
   const d = new Date();
@@ -8,65 +9,37 @@ function todayIsoDate(): string {
 export async function canDeploy(userId: string): Promise<boolean> {
   if (!userId) return false;
 
-  const deploy_date = todayIsoDate();
+  const deployDate = todayIsoDate();
+  const docId = `${userId}_${deployDate}`;
+  const docRef = doc(db, "deployLogs", docId);
+  const docSnap = await getDoc(docRef);
 
-  const { data, error } = await supabase
-    .from("deploy_logs")
-    .select("count")
-    .eq("user_id", userId)
-    .eq("deploy_date", deploy_date)
-    .maybeSingle();
+  if (!docSnap.exists()) return true;
 
-  if (error) {
-    console.error("canDeploy query error:", error);
-    return false;
-  }
-
-  // ✅ THIS IS CORRECT
-  if (!data) return true;
-
-  return data.count < 2;
+  const data = docSnap.data();
+  return (data.count || 0) < 2;
 }
 
 export async function incrementDeploy(userId: string): Promise<boolean> {
   if (!userId) return false;
 
-  const deploy_date = todayIsoDate();
+  const deployDate = todayIsoDate();
+  const docId = `${userId}_${deployDate}`;
+  const docRef = doc(db, "deployLogs", docId);
+  const docSnap = await getDoc(docRef);
 
-  const { data, error } = await supabase
-    .from("deploy_logs")
-    .select("user_id, deploy_date, count")
-    .eq("user_id", userId)
-    .eq("deploy_date", deploy_date)
-    .maybeSingle();
-
-  if (error) {
-    console.error("incrementDeploy select error:", error);
-    return false;
+  let newCount = 1;
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    newCount = (data.count || 0) + 1;
   }
 
-  if (!data) {
-    const { error: insertErr } = await supabase
-      .from("deploy_logs")
-      .insert([{ user_id: userId, deploy_date, count: 1 }]);
-
-    if (insertErr) {
-      console.error("incrementDeploy insert error:", insertErr);
-      return false;
-    }
-    return true;
-  }
-
-  const { error: updateErr } = await supabase
-    .from("deploy_logs")
-    .update({ count: data.count + 1 })
-    .eq("user_id", userId)
-    .eq("deploy_date", deploy_date);
-
-  if (updateErr) {
-    console.error("incrementDeploy update error:", updateErr);
-    return false;
-  }
+  await setDoc(docRef, {
+    userId,
+    deployDate,
+    count: newCount,
+    updatedAt: new Date(),
+  });
 
   return true;
 }

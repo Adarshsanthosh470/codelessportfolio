@@ -1,20 +1,15 @@
-import { supabase } from "@/services/supabase";
+import { db } from "@/services/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 export async function getPortfolioByUsername(username: string) {
-  const { data, error } = await supabase
-    .from("portfolios")
-    .select("data")
-    .eq("username", username.toLowerCase())
-    .maybeSingle();
+  const normalized = username.toLowerCase().trim();
+  const docRef = doc(db, "portfolios", normalized);
+  const docSnap = await getDoc(docRef);
 
-  if (error) {
-    console.error("getPortfolioByUsername error:", error);
-    throw error;
-  }
-
-  if (!data) {
+  if (!docSnap.exists()) {
     throw new Error("Portfolio not found");
   }
 
+  const data = docSnap.data();
   return data.data;
 }
