@@ -11,5 +11,5 @@ export async function getPortfolioByUsername(username: string) {
   }
 
   const data = docSnap.data();
-  return data.data;
+  return data;
 }

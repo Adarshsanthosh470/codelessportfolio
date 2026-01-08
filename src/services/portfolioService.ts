@@ -45,7 +45,7 @@ export async function savePortfolio(userId: string, username: string, data: any)
   const portfolioData = {
     userId,
     username: normalized,
-    data: sanitizedData,
+    ...sanitizedData,
     updatedAt: serverTimestamp(),
   };
 
