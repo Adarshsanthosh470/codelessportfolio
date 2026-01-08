@@ -4,7 +4,7 @@ import { signInWithEmailLink, sendSignInLinkToEmail, onAuthStateChanged, User, A
 // Mock supabase object to maintain compatibility
 export const supabase = {
   auth: {
-    async getSession() {
+    async getSession(): Promise<{ data: { session: any }, error: any }> {
       return new Promise((resolve) => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
           unsubscribe();
@@ -24,7 +24,7 @@ export const supabase = {
       });
     },
 
-    async signInWithOtp({ email }: { email: string }) {
+    async signInWithOtp({ email }: { email: string }): Promise<{ error: any }> {
       try {
         await sendSignInLinkToEmail(auth, email, {
           url: `${window.location.origin}/`,
@@ -38,7 +38,7 @@ export const supabase = {
       }
     },
 
-    onAuthStateChange(callback: (event: string, session: any) => void) {
+    onAuthStateChange(callback: (event: string, session: any) => void): { data: { subscription: { unsubscribe: () => void } } } {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         if (user) {
           callback('SIGNED_IN', {
