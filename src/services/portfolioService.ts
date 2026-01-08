@@ -1,3 +1,4 @@
+// src/services/portfolioService.ts
 import { db } from "@/services/firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
@@ -11,7 +12,7 @@ export async function savePortfolio(
 
   const normalized = String(username).toLowerCase().trim();
 
-  // 1. Check if username is taken by someone else
+  // Check if username already exists for another user
   const usernameDocRef = doc(db, "portfolios", normalized);
   const usernameDoc = await getDoc(usernameDocRef);
 
@@ -22,16 +23,15 @@ export async function savePortfolio(
     }
   }
 
-  // 2. IMPORTANT: Remove non-serializable data (functions, etc.)
-  // This converts the state into a pure JSON object
+  // --- ADD THIS FIX ---
+  // This removes functions and non-serializable data from the state object
   const sanitizedData = JSON.parse(JSON.stringify(data));
 
-  // 3. Save to Firestore
   const portfolioData = {
     userId,
     username: normalized,
-    data: sanitizedData, // Use sanitized data here
-    updatedAt: serverTimestamp(), // Use serverTimestamp for accuracy
+    data: sanitizedData, // Use sanitizedData instead of raw data
+    updatedAt: serverTimestamp(), // Use serverTimestamp for better accuracy
   };
 
   await setDoc(doc(db, "portfolios", normalized), portfolioData);
