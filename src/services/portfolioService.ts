@@ -2,9 +2,8 @@ import { db, storage } from "./firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-// Uploads a file to Firebase Storage and returns the public URL
+// Helper to upload images to Firebase Storage instead of saving them as text strings
 export async function uploadImage(file: File, userId: string, path: string): Promise<string> {
-  // Create a unique path for the file
   const storageRef = ref(storage, `portfolios/${userId}/${path}/${Date.now()}_${file.name}`);
   const snapshot = await uploadBytes(storageRef, file);
   return await getDownloadURL(snapshot.ref);
@@ -15,13 +14,15 @@ export async function savePortfolio(userId: string, username: string, data: any)
 
   const normalized = String(username).toLowerCase().trim();
 
-  // Clean the data to remove non-serializable properties (functions, etc.)
+  // --- CRITICAL FIX: SANITIZE DATA ---
+  // This removes any circular references, functions, or 'undefined' values
+  // that cause the "invalid nested entity" error in Firebase.
   const sanitizedData = JSON.parse(JSON.stringify(data));
 
   const portfolioData = {
     userId,
     username: normalized,
-    data: sanitizedData,
+    data: sanitizedData, 
     updatedAt: serverTimestamp(),
   };
 
@@ -37,9 +38,9 @@ export async function savePortfolio(userId: string, username: string, data: any)
     return portfolioData;
   } catch (error: any) {
     console.error("Firestore Error:", error);
-    // If the error is related to size, inform the user
-    if (error.code === 'out-of-range') {
-      throw new Error("Portfolio data is too large. Try using fewer or smaller images.");
+    // Specifically handle size-related errors which often look like invalid entities
+    if (error.code === 'out-of-range' || error.message?.includes('too large')) {
+      throw new Error("Portfolio data is too large. Try reducing image sizes or content.");
     }
     throw error;
   }

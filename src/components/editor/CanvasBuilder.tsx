@@ -9,12 +9,12 @@ import {
   MousePointer2,
   Trash2,
   Move,
-  Loader2
+  Loader2 // Added for upload feedback
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { CanvasElement } from "@/types/portfolio";
 
-// --- NEW IMPORTS ---
+// --- NEW SERVICE IMPORTS ---
 import { useToast } from "@/hooks/use-toast";
 import { uploadImage } from "@/services/portfolioService";
 import { auth } from "@/services/firebase";
@@ -25,7 +25,7 @@ const CanvasBuilder = () => {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [isUploading, setIsUploading] = useState<string | null>(null); // Track which element is uploading
+  const [isUploading, setIsUploading] = useState<string | null>(null); // Track specific element uploads
   const canvasRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -122,7 +122,7 @@ const CanvasBuilder = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 1. Check if user is logged in (needed for storage permissions)
+    // 1. Verify User Authentication
     const user = auth.currentUser;
     if (!user) {
       toast({
@@ -133,32 +133,22 @@ const CanvasBuilder = () => {
       return;
     }
 
-    // 2. Prevent large files (Optional but recommended)
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      toast({
-        title: "File too large",
-        description: "Please choose an image smaller than 5MB.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       setIsUploading(elementId);
-      toast({ title: "Uploading image...", description: "Saving to cloud storage." });
+      toast({ title: "Uploading...", description: "Saving image to cloud storage." });
 
-      // 3. Upload to Firebase Storage instead of using Base64
-      const imageUrl = await uploadImage(file, user.uid, 'canvas-elements');
+      // 2. Upload to Firebase Storage instead of Base64
+      const imageUrl = await uploadImage(file, user.uid, 'canvas-uploads');
 
-      // 4. Update the element with the remote URL
+      // 3. Update element with the permanent URL
       updateCanvasElement(elementId, { content: imageUrl });
       
-      toast({ title: "Success", description: "Image saved successfully." });
+      toast({ title: "Success", description: "Image uploaded successfully." });
     } catch (error: any) {
-      console.error("Image upload failed:", error);
+      console.error("Upload failed:", error);
       toast({
         title: "Upload failed",
-        description: "Could not save the image. Please try again.",
+        description: "There was an error saving your image. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -225,7 +215,7 @@ const CanvasBuilder = () => {
             {isUploading === element.id ? (
               <div className="flex flex-col items-center gap-2">
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Uploading</span>
+                <span className="text-[10px] font-bold uppercase tracking-tighter">Saving</span>
               </div>
             ) : element.content ? (
               <img src={element.content} alt="" className="w-full h-full object-cover" />
