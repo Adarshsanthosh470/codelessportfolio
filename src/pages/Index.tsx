@@ -69,14 +69,9 @@ const Index = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up" style={{ animationDelay: '0.3s' }}>
               <Button asChild variant="hero" size="xl">
-                <Link to="/editor">
-                  Create Your Portfolio
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="xl">
                 <Link to="/templates">
-                  Browse Templates
+                  Build Portfolio
+                  <ArrowRight className="w-5 h-5 ml-2" />
                 </Link>
               </Button>
             </div>

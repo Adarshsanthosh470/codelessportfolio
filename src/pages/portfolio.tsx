@@ -25,8 +25,10 @@ export default function Portfolio() {
     return <div className="p-10 text-center">Loading…</div>;
   }
 
+  const cleanData = JSON.parse(JSON.stringify(data));
+
   return (
-    <EditorProvider initialData={{ portfolioData: data }}>
+    <EditorProvider initialData={{ portfolioData: cleanData }}>
       <PortfolioPreview readOnly />
     </EditorProvider>
   );

@@ -42,6 +42,15 @@ const EditorSidebar = () => {
       return;
     }
 
+    if (file.size > 250 * 1024) {
+      toast({
+        title: "Image too large",
+        description: "Please upload an image smaller than 250kb.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const downloadURL = await uploadImage(file, user.uid, "profile");
       updatePortfolioData({ photo: downloadURL });

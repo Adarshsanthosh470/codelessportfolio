@@ -133,6 +133,15 @@ const CanvasBuilder = () => {
       return;
     }
 
+    if (file.size > 250 * 1024) {
+      toast({
+        title: "Image too large",
+        description: "Please upload an image smaller than 250kb.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsUploading(elementId);
       toast({ title: "Uploading...", description: "Saving image to cloud storage." });
