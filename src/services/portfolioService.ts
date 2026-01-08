@@ -9,30 +9,6 @@ export async function uploadImage(file: File, userId: string, path: string): Pro
   return await getDownloadURL(snapshot.ref);
 }
 
-// Sanitize data for Firestore compatibility
-function sanitizeForFirestore(obj: any): any {
-  if (obj === null || obj === undefined) return null;
-  if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') return obj;
-  if (obj instanceof Date) return obj; // Firestore accepts Date objects
-  if (Array.isArray(obj)) {
-    return obj.map(item => sanitizeForFirestore(item)).filter(item => item !== undefined);
-  }
-  if (typeof obj === 'object') {
-    const sanitized: any = {};
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        const value = obj[key];
-        if (value !== undefined && typeof value !== 'function' && typeof value !== 'symbol') {
-          sanitized[key] = sanitizeForFirestore(value);
-        }
-      }
-    }
-    return sanitized;
-  }
-  // For any other type (function, symbol, etc.), return null
-  return null;
-}
-
 export async function savePortfolio(userId: string, username: string, data: any) {
   if (!userId) throw new Error("userId is required");
 
@@ -40,7 +16,7 @@ export async function savePortfolio(userId: string, username: string, data: any)
 
   // --- IMPROVED SANITIZATION ---
   // Deep sanitize data to ensure Firestore compatibility
-  const sanitizedData = sanitizeForFirestore(data);
+  const sanitizedData = JSON.parse(JSON.stringify(data));
 
   const portfolioData = {
     userId,
