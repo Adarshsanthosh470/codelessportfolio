@@ -1,5 +1,13 @@
-import { db } from "./firebase";
+import { db, storage } from "./firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+export async function uploadImage(file: File, userId: string, path: string): Promise<string> {
+  const storageRef = ref(storage, `portfolios/${userId}/${path}/${file.name}`);
+  const snapshot = await uploadBytes(storageRef, file);
+  const downloadURL = await getDownloadURL(snapshot.ref);
+  return downloadURL;
+}
 
 export async function savePortfolio(userId: string, username: string, data: any) {
   if (!userId) throw new Error("userId is required");

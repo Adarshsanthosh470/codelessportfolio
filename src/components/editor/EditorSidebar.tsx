@@ -19,19 +19,43 @@ import {
   Code
 } from "lucide-react";
 import { Education, Experience, Project } from "@/types/portfolio";
+import { auth } from "@/services/firebase";
+import { uploadImage } from "@/services/portfolioService";
+import { useToast } from "@/hooks/use-toast";
 
 const EditorSidebar = () => {
    const { state, updatePortfolioData, updateCustomColors, updateCustomFont } = useEditor();
    const { portfolioData, customColors, customFont } = state;
+   const { toast } = useToast();
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        updatePortfolioData({ photo: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const user = auth.currentUser;
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to upload images.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const downloadURL = await uploadImage(file, user.uid, "profile");
+      updatePortfolioData({ photo: downloadURL });
+      toast({
+        title: "Photo uploaded",
+        description: "Your profile photo has been uploaded successfully.",
+      });
+    } catch (error) {
+      console.error("Upload failed:", error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload photo. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
