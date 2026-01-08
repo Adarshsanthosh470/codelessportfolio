@@ -1,11 +1,6 @@
 import { db } from "@/services/firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
-/**
- * Saves or updates a user's portfolio.
- * - Enforces unique username
- * - Stores portfolio data as JSON
- */
 export async function savePortfolio(
   userId: string,
   username: string,
@@ -14,10 +9,9 @@ export async function savePortfolio(
   if (!userId) throw new Error("userId is required");
   if (!username) throw new Error("username is required");
 
-  // normalize username
   const normalized = String(username).toLowerCase().trim();
 
-  // check if username already exists for another user
+  // 1. Check if username is taken by someone else
   const usernameDocRef = doc(db, "portfolios", normalized);
   const usernameDoc = await getDoc(usernameDocRef);
 
@@ -28,17 +22,19 @@ export async function savePortfolio(
     }
   }
 
-  // save/update portfolio
+  // 2. IMPORTANT: Remove non-serializable data (functions, etc.)
+  // This converts the state into a pure JSON object
+  const sanitizedData = JSON.parse(JSON.stringify(data));
+
+  // 3. Save to Firestore
   const portfolioData = {
     userId,
     username: normalized,
-    data,
-    updatedAt: new Date(),
+    data: sanitizedData, // Use sanitized data here
+    updatedAt: serverTimestamp(), // Use serverTimestamp for accuracy
   };
 
   await setDoc(doc(db, "portfolios", normalized), portfolioData);
 
   return portfolioData;
 }
-
-export default { savePortfolio };
