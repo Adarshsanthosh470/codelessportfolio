@@ -76,3 +76,6 @@ const handlePublish = async () => {
       });
     }
   };
+  // ... (existing code)
+
+export default PublishDialog;

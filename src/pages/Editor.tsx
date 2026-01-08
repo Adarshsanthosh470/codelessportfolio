@@ -6,7 +6,7 @@ import EditorSidebar from "@/components/editor/EditorSidebar";
 import PortfolioPreview from "@/components/editor/PortfolioPreview";
 import CanvasBuilder from "@/components/editor/CanvasBuilder";
 import TemplateCard from "@/components/editor/TemplateCard";
-import PublishDialog from "@/components/PublishDialog";
+import { PublishDialog } from "@/components/PublishDialog";
 import Footer from "@/components/Footer";
 import { templates } from "@/data/templates";
 import { 
