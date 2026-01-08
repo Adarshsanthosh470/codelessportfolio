@@ -8,10 +8,16 @@ import {
   Square, 
   MousePointer2,
   Trash2,
-  Move
+  Move,
+  Loader2
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { CanvasElement } from "@/types/portfolio";
+
+// --- NEW IMPORTS ---
+import { useToast } from "@/hooks/use-toast";
+import { uploadImage } from "@/services/portfolioService";
+import { auth } from "@/services/firebase";
 
 const CanvasBuilder = () => {
   const { state, addCanvasElement, updateCanvasElement, removeCanvasElement, updateCustomColors } = useEditor();
@@ -19,7 +25,9 @@ const CanvasBuilder = () => {
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isUploading, setIsUploading] = useState<string | null>(null); // Track which element is uploading
   const canvasRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const addText = () => {
     addCanvasElement({
@@ -109,14 +117,52 @@ const CanvasBuilder = () => {
     setDragging(null);
   };
 
-  const handleImageUpload = (elementId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+  // --- UPDATED IMAGE UPLOAD HANDLER ---
+  const handleImageUpload = async (elementId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        updateCanvasElement(elementId, { content: reader.result as string });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // 1. Check if user is logged in (needed for storage permissions)
+    const user = auth.currentUser;
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to upload images to your portfolio.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // 2. Prevent large files (Optional but recommended)
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast({
+        title: "File too large",
+        description: "Please choose an image smaller than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsUploading(elementId);
+      toast({ title: "Uploading image...", description: "Saving to cloud storage." });
+
+      // 3. Upload to Firebase Storage instead of using Base64
+      const imageUrl = await uploadImage(file, user.uid, 'canvas-elements');
+
+      // 4. Update the element with the remote URL
+      updateCanvasElement(elementId, { content: imageUrl });
+      
+      toast({ title: "Success", description: "Image saved successfully." });
+    } catch (error: any) {
+      console.error("Image upload failed:", error);
+      toast({
+        title: "Upload failed",
+        description: "Could not save the image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(null);
     }
   };
 
@@ -131,6 +177,7 @@ const CanvasBuilder = () => {
       cursor: dragging === element.id ? 'grabbing' : 'grab',
       outline: isSelected ? '2px solid hsl(var(--primary))' : 'none',
       outlineOffset: '2px',
+      zIndex: isSelected ? 10 : 1,
     };
 
     switch (element.type) {
@@ -171,14 +218,19 @@ const CanvasBuilder = () => {
               borderRadius: element.styles.borderRadius,
               overflow: 'hidden',
             }}
-            className="bg-muted flex items-center justify-center"
+            className="bg-muted flex items-center justify-center border border-dashed border-muted-foreground/20"
             onMouseDown={(e) => handleMouseDown(e, element.id)}
             onClick={() => setSelectedElement(element.id)}
           >
-            {element.content ? (
+            {isUploading === element.id ? (
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Uploading</span>
+              </div>
+            ) : element.content ? (
               <img src={element.content} alt="" className="w-full h-full object-cover" />
             ) : (
-              <label className="cursor-pointer flex flex-col items-center gap-2 text-muted-foreground">
+              <label className="cursor-pointer flex flex-col items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
                 <ImageIcon className="w-8 h-8" />
                 <span className="text-sm">Upload</span>
                 <input
@@ -229,7 +281,7 @@ const CanvasBuilder = () => {
               color: element.styles.color,
               borderRadius: element.styles.borderRadius,
             }}
-            className="flex items-center justify-center font-medium"
+            className="flex items-center justify-center font-medium shadow-sm"
             onMouseDown={(e) => handleMouseDown(e, element.id)}
             onClick={() => setSelectedElement(element.id)}
           >
@@ -288,7 +340,7 @@ const CanvasBuilder = () => {
                   type="color"
                   value={customColors.background}
                   onChange={(e) => updateCustomColors({ background: e.target.value })}
-                  className="w-8 h-8 rounded cursor-pointer border-0"
+                  className="w-8 h-8 rounded cursor-pointer border-0 p-0 overflow-hidden"
                 />
                 <Input
                   value={customColors.background}
@@ -304,7 +356,7 @@ const CanvasBuilder = () => {
                   type="color"
                   value={customColors.primary}
                   onChange={(e) => updateCustomColors({ primary: e.target.value })}
-                  className="w-8 h-8 rounded cursor-pointer border-0"
+                  className="w-8 h-8 rounded cursor-pointer border-0 p-0 overflow-hidden"
                 />
                 <Input
                   value={customColors.primary}
@@ -334,7 +386,7 @@ const CanvasBuilder = () => {
           </div>
         )}
 
-        <div className="text-xs text-muted-foreground flex items-center gap-2">
+        <div className="text-xs text-muted-foreground flex items-center gap-2 pt-4 border-t border-border">
           <Move className="w-4 h-4" />
           Drag elements to position
         </div>
@@ -343,20 +395,20 @@ const CanvasBuilder = () => {
       {/* Canvas */}
       <div 
         ref={canvasRef}
-        className="flex-1 relative overflow-auto"
+        className="flex-1 relative overflow-auto scrollbar-hide"
         style={{ backgroundColor: customColors.background }}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onClick={() => setSelectedElement(null)}
       >
-        <div className="min-h-full min-w-full relative">
+        <div className="min-h-full min-w-full relative p-8">
           {canvasElements.map(renderElement)}
           
           {canvasElements.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/40 pointer-events-none">
               <div className="text-center">
-                <MousePointer2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <MousePointer2 className="w-12 h-12 mx-auto mb-4 opacity-20" />
                 <p className="text-lg font-medium">Start building your portfolio</p>
                 <p className="text-sm">Add elements from the sidebar</p>
               </div>
