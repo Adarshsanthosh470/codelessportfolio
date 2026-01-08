@@ -1,4 +1,3 @@
-// src/services/portfolioService.ts
 import { db } from "@/services/firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
@@ -12,7 +11,7 @@ export async function savePortfolio(
 
   const normalized = String(username).toLowerCase().trim();
 
-  // Check if username already exists for another user
+  // 1. Check if username is taken (existing logic)
   const usernameDocRef = doc(db, "portfolios", normalized);
   const usernameDoc = await getDoc(usernameDocRef);
 
@@ -23,18 +22,27 @@ export async function savePortfolio(
     }
   }
 
-  // --- ADD THIS FIX ---
-  // This removes functions and non-serializable data from the state object
+  /**
+   * FIX: Sanitize the data
+   * This converts the complex React state object into a plain JSON string 
+   * and back into an object, which automatically strips out functions 
+   * and 'undefined' values that Firestore cannot store.
+   */
   const sanitizedData = JSON.parse(JSON.stringify(data));
 
   const portfolioData = {
     userId,
     username: normalized,
-    data: sanitizedData, // Use sanitizedData instead of raw data
-    updatedAt: serverTimestamp(), // Use serverTimestamp for better accuracy
+    data: sanitizedData, // Save the cleaned data
+    updatedAt: serverTimestamp(), // Use server-side time for accuracy
   };
 
-  await setDoc(doc(db, "portfolios", normalized), portfolioData);
-
-  return portfolioData;
+  try {
+    // Attempt to save to Firestore
+    await setDoc(doc(db, "portfolios", normalized), portfolioData);
+    return portfolioData;
+  } catch (error: any) {
+    console.error("Firestore Save Error Details:", error);
+    throw new Error(error.message || "Failed to save to database");
+  }
 }
