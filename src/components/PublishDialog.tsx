@@ -1,81 +1,102 @@
-const handlePublish = async () => {
-    // Basic validation
-    if (!username.trim()) {
-      toast({
-        title: "Username required",
-        description: "Please enter a username for your portfolio URL.",
-        variant: "destructive",
-      });
-      return;
-    }
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Globe, AlertCircle, Rocket, CheckCircle2, Copy, ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useEditor } from "@/contexts/EditorContext";
+import PortfolioPreview from "@/components/editor/PortfolioPreview";
+import { supabase } from "@/services/supabase";
+import { canDeploy, incrementDeploy } from "@/services/deployService";
+import { savePortfolio } from "@/services/portfolioService";
 
-    if (deploymentsRemaining <= 0) {
-      toast({
-        title: "Deployment limit reached",
-        description: "You have reached your daily limit of 2 portfolio deployments.",
-        variant: "destructive",
-      });
+interface PublishDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  deploymentsRemaining: number;
+}
+
+const PublishDialog = ({ open, onOpenChange, deploymentsRemaining }: PublishDialogProps) => {
+  const [username, setUsername] = useState("");
+  const [publishSuccess, setPublishSuccess] = useState(false);
+  const { toast } = useToast();
+  const { state } = useEditor();
+
+  const portfolioUrl = `codelessportfolio.netlify.app/${username}`;
+
+  const handlePublish = async () => {
+    if (!username.trim()) {
+      toast({ title: "Username required", variant: "destructive" });
       return;
     }
 
     try {
-      // 1. Authenticate / Check Session
       const { data: sessionData } = await supabase.auth.getSession();
       const session = sessionData?.session ?? null;
 
       if (!session) {
-        const email = window.prompt("Enter your email to receive a login link (one-time):");
-        if (!email) {
-          toast({ title: "Email required", description: "Email is needed to save your work.", variant: "destructive" });
-          return;
-        }
-        const { error } = await supabase.auth.signInWithOtp({ email });
-        if (error) throw error;
-        
-        toast({ title: "Check your email", description: "Login link sent! Sign in and click Publish again." });
+        const email = window.prompt("Enter email for login link:");
+        if (email) await supabase.auth.signInWithOtp({ email });
+        toast({ title: "Login link sent", description: "Check your email." });
         return;
       }
 
       const userId = (session.user as any)?.id;
-      if (!userId) throw new Error("Unable to determine user identity.");
-
-      // 2. Check Deployment Limits
+      
+      // 1. Check Deployment Eligibility
       const allowed = await canDeploy(userId);
-      if (!allowed) {
-        toast({ 
-          title: "Limit reached", 
-          description: "Daily limit of 2 deployments reached.", 
-          variant: "destructive" 
-        });
-        return;
-      }
+      if (!allowed) throw new Error("Daily deployment limit reached (2).");
 
-      // 3. Increment Deployment Counter
-      // We wrap this and savePortfolio together because both require database writes
-      const incOk = await incrementDeploy(userId);
-      if (!incOk) throw new Error("Failed to record deployment count.");
+      // 2. Increment Deploy Count
+      await incrementDeploy(userId);
 
-      // 4. Save Portfolio Data
-      // This is where the 'portfolios' collection is updated
+      // 3. Save to Firestore
       await savePortfolio(userId, username, state);
 
       setPublishSuccess(true);
-      toast({
-        title: "Portfolio Published!",
-        description: `Your portfolio is live at https://${portfolioUrl}`,
-      });
+      toast({ title: "Portfolio Published!", description: `Live at ${portfolioUrl}` });
 
     } catch (err: any) {
-      // LOG THE ERROR: This is critical for debugging
-      console.error("Critical Publishing Error:", err);
-      
-      toast({
-        title: "Publish failed",
-        description: err.message || "An unexpected error occurred during deployment.",
-        variant: "destructive",
-      });
+      console.error("Deploy Error:", err);
+      toast({ title: "Publish failed", description: err.message, variant: "destructive" });
     }
   };
-  // ... (existing code)
+
+  const resetDialog = () => { setPublishSuccess(false); setUsername(""); onOpenChange(false); };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        {publishSuccess ? (
+          <>
+            <DialogHeader><DialogTitle>Portfolio Published!</DialogTitle></DialogHeader>
+            <div className="p-4 bg-muted rounded-lg">
+              <Label>Your URL: https://{portfolioUrl}</Label>
+              <div className="flex gap-2 mt-2">
+                <Button size="icon" variant="outline" onClick={() => navigator.clipboard.writeText(`https://${portfolioUrl}`)}><Copy className="w-4" /></Button>
+              </div>
+            </div>
+            <Button onClick={resetDialog} className="w-full">Done</Button>
+          </>
+        ) : (
+          <>
+            <DialogHeader><DialogTitle>Publish Your Portfolio</DialogTitle></DialogHeader>
+            <div className="space-y-4">
+              <Label htmlFor="username">Choose your URL</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground whitespace-nowrap">codelessportfolio.netlify.app/</span>
+                <Input id="username" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} placeholder="yourname" />
+              </div>
+              <Button variant="hero" className="w-full" onClick={handlePublish} disabled={!username.trim()}>
+                <Rocket className="w-4 h-4 mr-2" /> Publish Portfolio
+              </Button>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export default PublishDialog;
