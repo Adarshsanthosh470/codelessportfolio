@@ -26,7 +26,7 @@ export default function Portfolio() {
   }
 
   return (
-    <EditorProvider initialData={data}>
+    <EditorProvider initialData={{ portfolioData: data }}>
       <PortfolioPreview readOnly />
     </EditorProvider>
   );

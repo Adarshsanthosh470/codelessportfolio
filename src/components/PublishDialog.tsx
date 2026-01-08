@@ -99,7 +99,7 @@ const PublishDialog = ({ open, onOpenChange, deploymentsRemaining }: PublishDial
       const incOk = await incrementDeploy(userId);
       if (!incOk) throw new Error("Failed to record deployment count.");
 
-      await savePortfolio(userId, username, state);
+      await savePortfolio(userId, username, state.portfolioData);
 
       // 4. Update UI State on success
       setPublishSuccess(true);
